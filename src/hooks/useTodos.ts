@@ -58,6 +58,40 @@ export function useTodos() {
     setTodos((prev) => prev.filter((todo) => !todo.completed));
   };
 
+  const exportTodos = () => {
+    const data = JSON.stringify(todos, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `todos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importTodos = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported: Todo[] = JSON.parse(e.target?.result as string);
+        if (!Array.isArray(imported)) throw new Error("Invalid format");
+        // Validate each item has required fields
+        const valid = imported.every(
+          (t) =>
+            typeof t.id === "string" &&
+            typeof t.text === "string" &&
+            typeof t.completed === "boolean" &&
+            typeof t.createdAt === "number"
+        );
+        if (!valid) throw new Error("Invalid todo format");
+        setTodos(imported);
+      } catch {
+        alert("Invalid backup file. Please select a valid JSON file.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return {
     todos,
     isLoaded,
@@ -65,6 +99,8 @@ export function useTodos() {
     toggleTodo,
     deleteTodo,
     clearCompleted,
+    exportTodos,
+    importTodos,
     completedCount: todos.filter((t) => t.completed).length,
     totalCount: todos.length,
   };

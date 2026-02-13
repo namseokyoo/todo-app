@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useTodos } from "@/hooks/useTodos";
 import { TodoItem } from "./TodoItem";
 import { AddTodo } from "./AddTodo";
@@ -12,9 +13,13 @@ export function TodoList() {
     toggleTodo,
     deleteTodo,
     clearCompleted,
+    exportTodos,
+    importTodos,
     completedCount,
     totalCount,
   } = useTodos();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isLoaded) {
     return (
@@ -75,6 +80,37 @@ export function TodoList() {
             />
           ))
         )}
+      </div>
+
+      {/* Backup / Restore */}
+      <div className="flex items-center justify-center gap-4 pt-2 border-t border-gray-100">
+        <button
+          onClick={exportTodos}
+          disabled={totalCount === 0}
+          className="text-sm text-gray-500 hover:text-blue-600 hover:underline transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Export
+        </button>
+        <span className="text-gray-300">|</span>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="text-sm text-gray-500 hover:text-blue-600 hover:underline transition-colors"
+        >
+          Import
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              importTodos(file);
+              e.target.value = "";
+            }
+          }}
+        />
       </div>
     </div>
   );
